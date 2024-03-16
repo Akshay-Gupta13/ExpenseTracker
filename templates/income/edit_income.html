@@ -49,13 +49,13 @@
         <div class="form-group">
           <label for="">Source</label>
           <select class="form-control" name="source">
-            <option selected name="source" value="{{values.source}}"
-              >{{values.source}}</option
-            >
+            <option selected name="source" value="{{values.source}}"></option>
+              {{values.source}}
+            </option>
             {% for source in sources%}
-            <option name="source" value="{{source.name}}"
-              >{{source.name}}</option
-            >
+            <option name="source" value="{{source.name}}">
+              {{source.name}}
+            </option>
 
             {% endfor %}
           </select>

@@ -1,5 +1,4 @@
 from django.shortcuts import render
-# Create your views here.
 from django.shortcuts import render, redirect
 from django.views import View
 import json
@@ -33,7 +32,7 @@ class EmailValidationView(View):
             return JsonResponse({'email_error': 'sorry email in use,choose another one '}, status=409)
         return JsonResponse({'email_valid': True})
 
-##################################################################################################################
+#####################################################################################################################
 class UsernameValidationView(View):
     def post(self, request):
         data = json.loads(request.body)
@@ -99,7 +98,7 @@ class RegistrationView(View):
 
         return render(request, 'authentication/register.html')
 
-###########################################################################################################
+##########################################################################################################################
 class VerificationView(View):
     def get(self, request, uidb64, token):
         try:
@@ -122,7 +121,7 @@ class VerificationView(View):
 
         return redirect('login')
 
-#############################################################################################################
+########################################################################################################################
 class LoginView(View):
     def get(self, request):
         return render(request, 'authentication/login.html')
@@ -151,9 +150,11 @@ class LoginView(View):
             request, 'Please fill all fields')
         return render(request, 'authentication/login.html')
 
-##############################################################################################################
+##########################################################################################################################
 class LogoutView(View):
     def post(self, request):
         auth.logout(request)
         messages.success(request, 'You have been logged out')
         return redirect('login')
+    
+########################################################################################################################

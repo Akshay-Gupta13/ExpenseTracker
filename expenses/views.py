@@ -24,7 +24,6 @@ def search_expenses(request):
 
 
 @login_required(login_url='/authentication/login')
-####################################################################################################
 def index(request):
     categories = Category.objects.all()
     expenses = Expense.objects.filter(owner=request.user)
@@ -41,7 +40,6 @@ def index(request):
 
 
 @login_required(login_url='/authentication/login')
-#####################################################################################
 def add_expense(request):
     categories = Category.objects.all()
     context = {
@@ -73,7 +71,6 @@ def add_expense(request):
 
 
 @login_required(login_url='/authentication/login')
-###########################################################################################
 def expense_edit(request, id):
     expense = Expense.objects.get(pk=id)
     categories = Category.objects.all()
@@ -108,14 +105,14 @@ def expense_edit(request, id):
         messages.success(request, 'Expense updated  successfully')
 
         return redirect('expenses')
-#######################################################################################################
+
 
 def delete_expense(request, id):
     expense = Expense.objects.get(pk=id)
     expense.delete()
     messages.success(request, 'Expense removed')
     return redirect('expenses')
-###################################################################################################
+
 
 def expense_category_summary(request):
     todays_date = datetime.date.today()
@@ -142,6 +139,6 @@ def expense_category_summary(request):
 
     return JsonResponse({'expense_category_data': finalrep}, safe=False)
 
-#########################################################################################################
+
 def stats_view(request):
     return render(request, 'expenses/stats.html')
