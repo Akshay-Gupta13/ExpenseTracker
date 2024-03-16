@@ -8,9 +8,9 @@ from django.core.paginator import Paginator
 import json
 from django.http import JsonResponse
 from userpreferences.models import UserPreference
-import datetime
+from datetime import datetime
 
-
+ 
 def search_expenses(request):
     if request.method == 'POST':
         search_str = json.loads(request.body).get('searchText')
@@ -58,9 +58,24 @@ def add_expense(request):
         description = request.POST['description']
         date = request.POST['expense_date']
         category = request.POST['category']
-
+        try:
+            amount = float(amount)
+        except ValueError:
+            messages.error(request, 'Amount should be a valid number')
+            return render(request, 'expenses/add_expense.html', context)
+          #valid number check wala condition bhi add karna hai
         if not description:
             messages.error(request, 'description is required')
+            return render(request, 'expenses/add_expense.html', context)
+        
+        if not date:  # If no date is provided, use today's date
+            date = datetime.now().strftime('%d/%m/%Y')
+
+        # Convert date string to datetime object
+        try:
+            date = datetime.strptime(date, '%d/%m/%Y').date()
+        except ValueError:
+            messages.error(request, 'Invalid date format. Please use dd/mm/yyyy')
             return render(request, 'expenses/add_expense.html', context)
 
         Expense.objects.create(owner=request.user, amount=amount, date=date,
@@ -68,7 +83,7 @@ def add_expense(request):
         messages.success(request, 'Expense saved successfully')
 
         return redirect('expenses')
-
+        
 
 @login_required(login_url='/authentication/login')
 def expense_edit(request, id):
@@ -94,7 +109,7 @@ def expense_edit(request, id):
         if not description:
             messages.error(request, 'description is required')
             return render(request, 'expenses/edit-expense.html', context)
-
+    
         expense.owner = request.user
         expense.amount = amount
         expense. date = date
@@ -117,8 +132,7 @@ def delete_expense(request, id):
 def expense_category_summary(request):
     todays_date = datetime.date.today()
     six_months_ago = todays_date-datetime.timedelta(days=30*6)
-    expenses = Expense.objects.filter(owner=request.user,
-                                      date__gte=six_months_ago, date__lte=todays_date)
+    expenses = Expense.objects.filter(owner=request.user, date__gte=six_months_ago, date__lte=todays_date)
     finalrep = {}
 
     def get_category(expense):
