@@ -14,9 +14,9 @@ class Expense(models.Model):
 
     def __str__(self):
         return self.category
-
-    class Meta:
-        ordering: ['-date'] # type: ignore
+    
+class Meta:
+        ordering = ['-date']  # Reverse order by date
 
 
 class Category(models.Model):

@@ -19,9 +19,10 @@ def search_expenses(request):
             date__istartswith=search_str, owner=request.user) | Expense.objects.filter(
             description__icontains=search_str, owner=request.user) | Expense.objects.filter(
             category__icontains=search_str, owner=request.user)
+        
         data = expenses.values()
         return JsonResponse(list(data), safe=False)
-
+ 
 
 @login_required(login_url='/authentication/login')
 def index(request):
@@ -68,15 +69,15 @@ def add_expense(request):
             messages.error(request, 'description is required')
             return render(request, 'expenses/add_expense.html', context)
         
-        if not date:  # If no date is provided, use today's date
-            date = datetime.now().strftime('%d/%m/%Y')
-
-        # Convert date string to datetime object
-        try:
-            date = datetime.strptime(date, '%d/%m/%Y').date()
-        except ValueError:
-            messages.error(request, 'Invalid date format. Please use dd/mm/yyyy')
-            return render(request, 'expenses/add_expense.html', context)
+        # if date:  # If date is provided by the user
+        #     try:
+        #         # Convert the date string to a datetime object
+        #         expense_date = datetime.strptime(date, '%Y-%m-%d').date()
+        #     except ValueError:
+        #         messages.error(request, 'Invalid date format. Please use YYYY-MM-DD')
+        #         return render(request, 'expenses/add_expense.html', context)
+        # else:  # If date is not provided, use today's date
+        #     expense_date = datetime.now().date()
 
         Expense.objects.create(owner=request.user, amount=amount, date=date,
                                category=category, description=description)

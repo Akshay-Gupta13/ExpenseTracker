@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 import json
 from django.http import JsonResponse
+from datetime import datetime
 # Create your views here.
 
 
@@ -49,18 +50,40 @@ def add_income(request):
 
     if request.method == 'POST':
         amount = request.POST['amount']
-
-        if not amount:
-            messages.error(request, 'Amount is required')
-            return render(request, 'income/add_income.html', context)
         description = request.POST['description']
-        date = request.POST['income_date']
-        source = request.POST['source']
+        date_str = request.POST['income_date']
+        source_name = request.POST['source']
+
+        # Check if amount is provided and if it's an integer
+        try:
+            amount = int(amount)
+        except ValueError:
+            messages.error(request, 'Amount must be an integer')
+            return render(request, 'income/add_income.html', context)
 
         if not description:
-            messages.error(request, 'description is required')
+            messages.error(request, 'Description is required')
             return render(request, 'income/add_income.html', context)
 
+        # If no date is provided, default to today's date
+        if not date_str:
+            date = datetime.now().date()
+        else:
+            try:
+                # Convert the date string to a datetime object
+                date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            except ValueError:
+                messages.error(request, 'Invalid date format. Please use YYYY-MM-DD')
+                return render(request, 'income/add_income.html', context)
+
+        try:
+            # Try to fetch the corresponding source instance from the database
+            source = Source.objects.get(name=source_name)
+        except Source.DoesNotExist:
+            # If source doesn't exist, create a new one
+            source = Source.objects.create(name=source_name)
+
+        # Create UserIncome instance with the obtained source instance
         UserIncome.objects.create(owner=request.user, amount=amount, date=date,
                                   source=source, description=description)
         messages.success(request, 'Record saved successfully')
@@ -81,25 +104,31 @@ def income_edit(request, id):
         return render(request, 'income/edit_income.html', context)
     if request.method == 'POST':
         amount = request.POST['amount']
+        description = request.POST['description']
+        date_str = request.POST['income_date']
+        source_name = request.POST['source']
 
         if not amount:
             messages.error(request, 'Amount is required')
             return render(request, 'income/edit_income.html', context)
-        description = request.POST['description']
-        date = request.POST['income_date']
-        source = request.POST['source']
-
         if not description:
-            messages.error(request, 'description is required')
+            messages.error(request, 'Description is required')
             return render(request, 'income/edit_income.html', context)
+
+        try:
+            # Try to fetch the corresponding source instance from the database
+            source = Source.objects.get(name=source_name)
+        except Source.DoesNotExist:
+            # If source doesn't exist, create a new one
+            source = Source.objects.create(name=source_name)
+
+        # Update UserIncome instance with the obtained source instance and other input values
         income.amount = amount
-        income. date = date
+        income.date = datetime.strptime(date_str, '%Y-%m-%d').date()
         income.source = source
         income.description = description
-
         income.save()
-        messages.success(request, 'Record updated  successfully')
-
+        messages.success(request, 'Record updated successfully')
         return redirect('income')
 
 
