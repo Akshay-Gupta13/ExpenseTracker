@@ -6,7 +6,7 @@ const paginationContainer = document.querySelector(".pagination-container");
 tableOutput.style.display = "none";
 const noResults = document.querySelector(".no-results");
 const tbody = document.querySelector(".table-body");
-
+ 
 searchField.addEventListener("keyup", (e) => {
   const searchValue = e.target.value;
 

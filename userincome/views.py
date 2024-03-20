@@ -7,6 +7,8 @@ from django.contrib.auth.decorators import login_required
 import json
 from django.http import JsonResponse
 from datetime import datetime
+from django.db.models import Q
+#  use Django's Q objects to construct complex queries that allow us to search for income records based on multiple fields.
 # Create your views here.
 
 #again same api call but this time on income part
@@ -14,17 +16,19 @@ def search_income(request):
     if request.method == 'POST':
         search_str = json.loads(request.body).get('searchText')
         income = UserIncome.objects.filter(
-            amount__istartswith=search_str, owner=request.user) | UserIncome.objects.filter(
-            date__istartswith=search_str, owner=request.user) | UserIncome.objects.filter(
-            description__icontains=search_str, owner=request.user) | UserIncome.objects.filter(
-            source__icontains=search_str, owner=request.user)
+            Q(amount__istartswith=search_str) |  # Search by amount
+            Q(date__istartswith=search_str) |    # Search by date
+            Q(description__icontains=search_str) |  # Search by description (case-insensitive)
+            Q(source__name__icontains=search_str),  # Search by source name (case-insensitive)
+            owner=request.user
+        )
         data = income.values()
         return JsonResponse(list(data), safe=False)
 
 
 @login_required(login_url='/authentication/login')
 def index(request):
-    sources = Source.objects.all()
+    categories = Source.objects.all()
     income = UserIncome.objects.filter(owner=request.user)
     paginator = Paginator(income, 5)
     page_number = request.GET.get('page')
@@ -51,44 +55,33 @@ def add_income(request):
     if request.method == 'POST':
         amount = request.POST['amount']
         description = request.POST['description']
-        date_str = request.POST['income_date']
+        date = request.POST['income_date']
         source_name = request.POST['source']
 
+        if not amount:
+            messages.error(request, 'Amount is required')
+            return render(request, 'income/add_income.html', context)
         try:
-            amount = int(amount)
+            amount = float(amount)
         except ValueError:
-            messages.error(request, 'Amount must be an integer')
+            messages.error(request, 'Amount should be a valid number')
             return render(request, 'income/add_income.html', context)
 
         if not description:
             messages.error(request, 'Description is required')
             return render(request, 'income/add_income.html', context)
 
-        # If no date is provided, default to today's date
-        if not date_str:
-            date = datetime.now().date()
-        else:
-            try:
-                # Convert the date string to a datetime object
-                date = datetime.strptime(date_str, '%Y-%m-%d').date()
-            except ValueError:
-                messages.error(request, 'Invalid date format. Please use YYYY-MM-DD')
-                return render(request, 'income/add_income.html', context)
-
+        # Fetch the corresponding Source instance based on the provided name
         try:
-            # Trying to fetch corresponding source instance from the database (user ka data)
             source = Source.objects.get(name=source_name)
         except Source.DoesNotExist:
             # If source doesn't exist, create a new one
             source = Source.objects.create(name=source_name)
 
-        # Create UserIncome instance with the obtained source instance for each income different record
         UserIncome.objects.create(owner=request.user, amount=amount, date=date,
                                   source=source, description=description)
         messages.success(request, 'Record saved successfully')
-
         return redirect('income')
-
 
 @login_required(login_url='/authentication/login')
 def income_edit(request, id):
@@ -104,31 +97,38 @@ def income_edit(request, id):
     if request.method == 'POST':
         amount = request.POST['amount']
         description = request.POST['description']
-        date_str = request.POST['income_date']
+        date = request.POST['income_date']
         source_name = request.POST['source']
 
         if not amount:
             messages.error(request, 'Amount is required')
             return render(request, 'income/edit_income.html', context)
+        try:
+            amount = float(amount)
+        except ValueError:
+            messages.error(request, 'Amount should be a valid number')
+            return render(request, 'income/edit_income.html', context)
+
         if not description:
             messages.error(request, 'Description is required')
             return render(request, 'income/edit_income.html', context)
 
+        # Fetch the corresponding Source instance based on the provided name
         try:
-            # to fetch  corresponding source instance from database
             source = Source.objects.get(name=source_name)
         except Source.DoesNotExist:
             # If source doesn't exist, create a new one
             source = Source.objects.create(name=source_name)
 
-        # Update UserIncome instance with the obtained source instance and other input values
         income.amount = amount
-        income.date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        income.date = date
         income.source = source
         income.description = description
         income.save()
+
         messages.success(request, 'Record updated successfully')
         return redirect('income')
+
 
 
 def delete_income(request, id):
