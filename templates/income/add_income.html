@@ -47,13 +47,23 @@
           <input
             type="date"
             class="form-control form-control-sm"
+            id="income_date"
             name="income_date"
+            placeholder="YYYY-MM-DD"
           />
         </div>
+        <script>
+          // Get the current date in YYYY-MM-DD format
+          var today = new Date().toISOString().split('T')[0];
+      
+          // by default setting date to recent date
+          document.getElementById('income_date').value = today;
+      </script>
+      
 
         <input
           type="submit"
-          value="Submit"
+          value="Save"
           class="btn btn-primary btn-primary-sm"
         />
       </form>
