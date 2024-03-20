@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from datetime import datetime
 # Create your views here.
 
-
+#again same api call but this time on income part
 def search_income(request):
     if request.method == 'POST':
         search_str = json.loads(request.body).get('searchText')
@@ -24,7 +24,7 @@ def search_income(request):
 
 @login_required(login_url='/authentication/login')
 def index(request):
-    categories = Source.objects.all()
+    sources = Source.objects.all()
     income = UserIncome.objects.filter(owner=request.user)
     paginator = Paginator(income, 5)
     page_number = request.GET.get('page')
@@ -54,7 +54,6 @@ def add_income(request):
         date_str = request.POST['income_date']
         source_name = request.POST['source']
 
-        # Check if amount is provided and if it's an integer
         try:
             amount = int(amount)
         except ValueError:
@@ -77,13 +76,13 @@ def add_income(request):
                 return render(request, 'income/add_income.html', context)
 
         try:
-            # Try to fetch the corresponding source instance from the database
+            # Trying to fetch corresponding source instance from the database (user ka data)
             source = Source.objects.get(name=source_name)
         except Source.DoesNotExist:
             # If source doesn't exist, create a new one
             source = Source.objects.create(name=source_name)
 
-        # Create UserIncome instance with the obtained source instance
+        # Create UserIncome instance with the obtained source instance for each income different record
         UserIncome.objects.create(owner=request.user, amount=amount, date=date,
                                   source=source, description=description)
         messages.success(request, 'Record saved successfully')
@@ -116,7 +115,7 @@ def income_edit(request, id):
             return render(request, 'income/edit_income.html', context)
 
         try:
-            # Try to fetch the corresponding source instance from the database
+            # to fetch  corresponding source instance from database
             source = Source.objects.get(name=source_name)
         except Source.DoesNotExist:
             # If source doesn't exist, create a new one
