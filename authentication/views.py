@@ -114,7 +114,7 @@ class VerificationView(View):
 
         except Exception as ex:
             pass
-
+        
         return redirect('login')
 
 class LoginView(View):

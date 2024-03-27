@@ -1,15 +1,11 @@
 const usernameField = document.querySelector("#usernameField");
 const feedBackArea = document.querySelector(".invalid_feedback");
-
 const emailField = document.querySelector("#emailField");
 const emailFeedBackArea = document.querySelector(".emailFeedBackArea");
-
 const passwordField = document.querySelector("#passwordField");
 const usernameSuccessOutput = document.querySelector(".usernameSuccessOutput");
 const showPasswordToggle = document.querySelector(".showPasswordToggle");
-
-const submitBtn = document.querySelector(".submit-btn");    
-
+const submitBtn = document.querySelector(".submit-btn");
 const handleToggleInput = (e) => {
   if (showPasswordToggle.textContent === "SHOW") {
     showPasswordToggle.textContent = "HIDE";
@@ -21,7 +17,7 @@ const handleToggleInput = (e) => {
 };
 
 showPasswordToggle.addEventListener("click", handleToggleInput);
- 
+
 emailField.addEventListener("keyup", (e) => {
   const emailVal = e.target.value;
 
@@ -77,4 +73,3 @@ usernameField.addEventListener("keyup", (e) => {
       });
   }
 });
-//user name , email, password verification and show, hide feature added 

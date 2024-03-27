@@ -4,13 +4,15 @@ from .models import Category, Expense
 # Create your views here.
 from django.contrib import messages
 from django.contrib.auth.models import User
+from django.http import HttpResponse
 from django.core.paginator import Paginator
 import json
 from django.http import JsonResponse
 from userpreferences.models import UserPreference
 from datetime import datetime
+import datetime
+import csv
 
- 
 def search_expenses(request):
     if request.method == 'POST':
         search_str = json.loads(request.body).get('searchText')
@@ -132,7 +134,7 @@ def delete_expense(request, id):
 
 def expense_category_summary(request):
     todays_date = datetime.date.today()
-    six_months_ago = todays_date-datetime.timedelta(days=30*6)
+    six_months_ago = todays_date - datetime.timedelta(days=30*6)
     expenses = Expense.objects.filter(owner=request.user, date__gte=six_months_ago, date__lte=todays_date)
     finalrep = {}
 
@@ -147,7 +149,7 @@ def expense_category_summary(request):
         for item in filtered_by_category:
             amount += item.amount
         return amount
-
+ 
     for x in expenses:
         for y in category_list:
             finalrep[y] = get_expense_category_amount(y)
@@ -157,3 +159,21 @@ def expense_category_summary(request):
 
 def stats_view(request):
     return render(request, 'expenses/stats.html')
+
+def export_csv(request):
+     
+      respose=HttpResponse(content_type = 'text/csv')
+      respose['Content-Disposition']='attachment: filename=Expenses'+ \
+          str(datetime.datetime.now())+'.csv'
+ 
+      writer = csv.writer(respose)
+      writer.writerow(['Amount','Description','Category', 'Date'])
+
+
+      expenses = Expense.objects.filter(owner=request.user)
+
+      for expense in expenses:
+          
+          writer.writerow([expense.amount,expense.description, expense.category, expense.date])
+
+      return respose
