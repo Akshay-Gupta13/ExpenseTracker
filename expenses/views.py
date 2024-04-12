@@ -12,6 +12,15 @@ from userpreferences.models import UserPreference
 from datetime import datetime
 import datetime
 import csv
+import xlwt
+
+from django.template.loader import render_to_string
+# from weasyprint import HTML
+import tempfile
+from django.db.models import Sum
+
+
+
 
 def search_expenses(request):
     if request.method == 'POST':
@@ -162,11 +171,11 @@ def stats_view(request):
 
 def export_csv(request):
      
-      respose=HttpResponse(content_type = 'text/csv')
-      respose['Content-Disposition']='attachment: filename=Expenses'+ \
+      response=HttpResponse(content_type = 'text/csv')
+      response['Content-Disposition']='attachment; filename=Expenses' + \
           str(datetime.datetime.now())+'.csv'
  
-      writer = csv.writer(respose)
+      writer = csv.writer(response)
       writer.writerow(['Amount','Description','Category', 'Date'])
 
 
@@ -176,4 +185,54 @@ def export_csv(request):
           
           writer.writerow([expense.amount,expense.description, expense.category, expense.date])
 
-      return respose
+      return response
+
+def export_excel(request):
+
+    response=HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition']='attachment; filename=Expenses' + \
+          str(datetime.datetime.now())+'.xls'
+    wb = xlwt.Workbook(encoding='utf-8')
+    ws = wb.add_sheet('Expenses')
+    row_num = 0
+    font_style = xlwt.XFStyle()
+    font_style.font.bold = True  
+
+    columns=['Amount', 'Description', 'Category', 'Date']
+
+    for col_num in range(len(columns)):
+        ws.write(row_num,col_num, columns[col_num], font_style)
+ 
+    font_style.font.bold = xlwt.XFStyle()
+
+    rows=Expense.objects.filter(owner=request.user).values_list('amount', 'description', 'category', 'date')
+    
+    for row in rows:
+        row_num+=1
+       
+        for col_num in range(len(row)):
+            ws.write(row_num,col_num, str(row[col_num]), font_style)
+
+    wb.save(response)
+
+    return response      
+
+# def export_pdf(request):
+#     response = HttpResponse(content_type='application/pdf')
+#     response['Content-Disposition'] = 'attachment; filename=Expenses' + str(datetime.datetime.now()) + '.pdf'
+
+#     expenses = Expense.objects.filter(owner=request.user)
+#     total_expenses = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
+
+#     html_string = render_to_string('expenses/pdf-output.html', {'expenses': expenses, 'total': total_expenses})
+#     html = HTML(string=html_string)
+
+#     result = html.write_pdf()
+
+#     with tempfile.NamedTemporaryFile(delete=True) as output:
+#         output.write(result)
+#         output.flush()
+#         output = open(output.name, 'rb')
+#         response.write(output.read())
+
+#     return response
